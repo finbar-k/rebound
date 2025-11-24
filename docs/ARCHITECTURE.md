@@ -16,14 +16,14 @@ Rebound is built on the following principles:
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    retry() Function                      │
+┌────────────────────────────────────────────────────────┐
+│                    retry() Function                    │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
 │  │   Circuit    │  │    Rate      │  │  Timeout &   │  │
 │  │   Breaker    │  │   Limit      │  │ Cancellation │  │
 │  │              │  │   Tracker    │  │              │  │
 │  └──────────────┘  └──────────────┘  └──────────────┘  │
-│                                                          │
+│                                                        │
 │  ┌──────────────────────────────────────────────────┐  │
 │  │            Retry Loop                            │  │
 │  │  1. Execute function                             │  │
@@ -32,12 +32,12 @@ Rebound is built on the following principles:
 │  │  4. Emit event (onEvent)                         │  │
 │  │  5. Sleep and retry                              │  │
 │  └──────────────────────────────────────────────────┘  │
-│                                                          │
+│                                                        │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
 │  │   Metrics    │  │    Events    │  │    Result    │  │
 │  │  Computation │  │   Emission   │  │   Building   │  │
 │  └──────────────┘  └──────────────┘  └──────────────┘  │
-└─────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────┘
 ```
 
 ## Design Decisions
@@ -46,7 +46,7 @@ Rebound is built on the following principles:
 
 **Decision**: Use enum-based failure domains instead of simple retry/no-retry flags.
 
-**Rationale**: 
+**Rationale**:
 - Different error types require different strategies
 - Rate limits need special handling (Retry-After headers)
 - Permanent errors should never retry
@@ -210,4 +210,3 @@ Provide `rateLimitState` to enable proactive rate limit handling.
 - **Distributed Tracing**: Integration with OpenTelemetry
 - **Metrics Export**: Built-in Prometheus/StatsD support
 - **Idempotency Keys**: Built-in idempotency key generation and tracking
-
