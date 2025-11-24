@@ -1,0 +1,53 @@
+{
+  "name": "rebound",
+  "version": "0.1.0",
+  "description": "Intelligent, policy-driven retries for modern distributed systems",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "retry",
+    "backoff",
+    "distributed-systems",
+    "resilience",
+    "typescript"
+  ],
+  "author": "Finbar Kelly",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/finbar-k/rebound.git"
+  },
+  "bugs": {
+    "url": "https://github.com/finbar-k/rebound/issues"
+  },
+  "homepage": "https://github.com/finbar-k/rebound#readme",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
