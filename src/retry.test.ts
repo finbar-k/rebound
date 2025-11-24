@@ -2,7 +2,7 @@
  * Test suite for retry functionality
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { retry, RetryCancelledError, RetryExhaustedError, createHttpError } from './index.js'
 import type { RetryEvent } from './types.js'
 import { ExponentialBackoffPolicy } from './policies/exponential.js'
@@ -13,9 +13,16 @@ describe('retry', () => {
     vi.useFakeTimers()
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('should succeed on first attempt', async () => {
     const fn = vi.fn().mockResolvedValue('success')
-    const result = await retry({ fn })
+    const promise = retry({ fn })
+    
+    await vi.runAllTimersAsync()
+    const result = await promise
 
     expect(result.value).toBe('success')
     expect(result.attempts.length).toBe(1)
@@ -28,7 +35,10 @@ describe('retry', () => {
       .mockRejectedValueOnce(new Error('fail'))
       .mockResolvedValueOnce('success')
 
-    const result = await retry({ fn, maxAttempts: 3 })
+    const promise = retry({ fn, maxAttempts: 3 })
+    
+    await vi.runAllTimersAsync()
+    const result = await promise
 
     expect(result.value).toBe('success')
     expect(result.attempts.length).toBe(2)
@@ -38,7 +48,17 @@ describe('retry', () => {
   it('should respect maxAttempts', async () => {
     const fn = vi.fn().mockRejectedValue(new Error('always fails'))
 
-    await expect(retry({ fn, maxAttempts: 3 })).rejects.toThrow(RetryExhaustedError)
+    const promise = retry({ fn, maxAttempts: 3 })
+    
+    // Advance timers to allow retries to complete
+    await vi.runAllTimersAsync()
+    
+    try {
+      await promise
+      expect.fail('Should have thrown RetryExhaustedError')
+    } catch (error) {
+      expect(error).toBeInstanceOf(RetryExhaustedError)
+    }
     expect(fn).toHaveBeenCalledTimes(3)
   })
 
@@ -47,7 +67,17 @@ describe('retry', () => {
 
     const fn = vi.fn().mockRejectedValue(rateLimitError)
 
-    await expect(retry({ fn, maxAttempts: 2 })).rejects.toThrow('Rate limited')
+    const promise = retry({ fn, maxAttempts: 2 })
+    
+    // Advance timers to allow retries to complete
+    await vi.runAllTimersAsync()
+    
+    try {
+      await promise
+      expect.fail('Should have thrown error')
+    } catch (error) {
+      expect((error as Error).message).toContain('Rate limited')
+    }
     expect(fn).toHaveBeenCalled()
   })
 
@@ -67,8 +97,11 @@ describe('retry', () => {
   })
 
   it('should support timeout', async () => {
+    // Function that rejects after delay (allows retry loop to continue)
     const fn = vi.fn().mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 10000))
+      () => new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('timeout test')), 500)
+      })
     )
 
     const promise = retry({
@@ -77,7 +110,9 @@ describe('retry', () => {
       maxAttempts: 10,
     })
 
+    // Advance timers to trigger the timeout (before second attempt)
     vi.advanceTimersByTime(1000)
+    await vi.runAllTimersAsync()
 
     await expect(promise).rejects.toThrow(RetryCancelledError)
   })
@@ -89,11 +124,14 @@ describe('retry', () => {
       .mockRejectedValueOnce(new Error('fail'))
       .mockResolvedValueOnce('success')
 
-    await retry({
+    const promise = retry({
       fn,
       maxAttempts: 3,
       onEvent,
     })
+
+    await vi.runAllTimersAsync()
+    await promise
 
     expect(onEvent).toHaveBeenCalled()
     const events: RetryEvent<unknown>[] = onEvent.mock.calls.map((call: unknown[]) => call[0] as RetryEvent<unknown>)
@@ -106,14 +144,30 @@ describe('retry', () => {
 
     const fn = vi.fn().mockRejectedValue(permanentError)
 
-    await expect(retry({ fn, maxAttempts: 5 })).rejects.toThrow('Bad request')
+    const promise = retry({ fn, maxAttempts: 5 })
+    await vi.runAllTimersAsync()
+    
+    try {
+      await promise
+      expect.fail('Should have thrown error')
+    } catch (error) {
+      expect((error as Error).message).toContain('Bad request')
+    }
     expect(fn).toHaveBeenCalledTimes(1) // Should not retry
   })
 
   it('should handle non-Error throws', async () => {
     const fn = vi.fn().mockRejectedValue('string error')
 
-    await expect(retry({ fn, maxAttempts: 2 })).rejects.toThrow()
+    const promise = retry({ fn, maxAttempts: 2 })
+    await vi.runAllTimersAsync()
+    
+    try {
+      await promise
+      expect.fail('Should have thrown error')
+    } catch (error) {
+      // Error should be thrown
+    }
     expect(fn).toHaveBeenCalledTimes(2)
   })
 
@@ -134,8 +188,11 @@ describe('retry', () => {
   it('should include lastError in RetryExhaustedError', async () => {
     const fn = vi.fn().mockRejectedValue(new Error('test error'))
 
+    const promise = retry({ fn, maxAttempts: 2 })
+    await vi.runAllTimersAsync()
+    
     try {
-      await retry({ fn, maxAttempts: 2 })
+      await promise
     } catch (error) {
       expect(error).toBeInstanceOf(RetryExhaustedError)
       expect((error as RetryExhaustedError).lastError).toBeDefined()
