@@ -2,9 +2,11 @@
 
 Intelligent, policy-driven retries for modern distributed systems.
 
+Available on npm as [`rebound-http-retry`](https://www.npmjs.com/package/rebound-http-retry).
+
 ## Philosophy
 
-Rebound goes beyond simple exponential backoff. It's designed by someone who deeply understands:
+Rebound goes beyond simple exponential backoff.
 
 - **Distributed systems** - Failure domains, network partitions, cascading failures
 - **Idempotency** - Safe retry semantics for operations that can be safely repeated
@@ -28,13 +30,13 @@ Rebound goes beyond simple exponential backoff. It's designed by someone who dee
 ## Installation
 
 ```bash
-npm install rebound
+npm install rebound-http-retry
 ```
 
 ## Quick Start
 
 ```typescript
-import { retry } from 'rebound'
+import { retry } from 'rebound-http-retry'
 
 const result = await retry({
   fn: async () => {
@@ -52,7 +54,7 @@ const result = await retry({
 ### Custom Retry Policy
 
 ```typescript
-import { retry, RetryPolicy, FailureDomain } from 'rebound'
+import { retry, RetryPolicy, FailureDomain } from 'rebound-http-retry'
 
 class CustomPolicy implements RetryPolicy {
   calculateDelay({ attempt, failureDomain }): number | null {
@@ -97,7 +99,7 @@ await retry({
 Rebound automatically detects HTTP 429 responses and respects `Retry-After` headers:
 
 ```typescript
-import { retry, createHttpError } from 'rebound'
+import { retry, createHttpError } from 'rebound-http-retry'
 
 // If the API returns 429 with Retry-After: 60
 // Rebound will wait 60 seconds before retrying
@@ -121,7 +123,7 @@ await retry({
 ### Custom Failure Classifier
 
 ```typescript
-import { FailureClassifier, FailureDomain } from 'rebound'
+import { FailureClassifier, FailureDomain } from 'rebound-http-retry'
 
 class MyClassifier implements FailureClassifier {
   classify({ error }): FailureDomain {
@@ -141,7 +143,7 @@ await retry({ fn, classifier: new MyClassifier() })
 For better error classification, use the utility function to create errors with response metadata:
 
 ```typescript
-import { retry, createHttpError } from 'rebound'
+import { retry, createHttpError } from 'rebound-http-retry'
 
 await retry({
   fn: async () => {

@@ -1,6 +1,6 @@
 {
-  "name": "rebound",
-  "version": "0.1.0",
+  "name": "rebound-http-retry",
+  "version": "0.1.1",
   "description": "Intelligent, policy-driven retries for modern distributed systems",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,7 +19,8 @@
     "dev": "tsc --watch",
     "test": "vitest",
     "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "retry",
