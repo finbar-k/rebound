@@ -27,6 +27,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Work around Rollup native optional deps bug on Linux
+        if: runner.os == 'Linux'
+        run: npm install @rollup/rollup-linux-x64-gnu --no-save
+
       - name: Run linter
         run: npm run lint
 
